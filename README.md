@@ -9,8 +9,8 @@ Python packages: in `requirements.txt`
 External: 
 
 - CUDA >= 8.0
-- CUDNN >= 7
-- TensorRT >= 3
+- CUDNN >= 5.0
+- TensorRT >= 3.0
 - Test dataset and list
 
 The list of test dataset should follow this format:
