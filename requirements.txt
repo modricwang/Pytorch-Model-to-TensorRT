@@ -1,0 +1,7 @@
+python>=3.5
+pycuda
+tensorrt
+torch
+torchvision
+numpy
+opencv
