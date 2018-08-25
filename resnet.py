@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
 import math
-import torch.utils.model_zoo as model_zoo
 from copy import deepcopy
 
-__all__ = ['Bottleneck', 'ResNet', 'resnet18', 'resnet50', 'resnet101', 'resnet152']
+__all__ = ['Bottleneck', 'ResNet', 'resnet50', 'resnet101', 'resnet152']
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -87,29 +86,31 @@ class Bottleneck(nn.Module):
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, args):
-        self.inplanes = 64
-        super(ResNet, self).__init__()
+
+        if not hasattr(args, 'input_size'):
+            args.input_size = 224
+
         self.args = args
 
-        if self.args.size == 896:
-            self.preconv = nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=5, bias=False)
-            self.prebn = nn.BatchNorm2d(64)
-            self.conv1_ = nn.Conv2d(64, 64, kernel_size=7, stride=2, padding=3,
-                                   bias=False)
-            self.bn1_ = nn.BatchNorm2d(64)
-        else:
-            self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                                   bias=False)
-            self.bn1 = nn.BatchNorm2d(64)
+        self.inplanes = 64
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
+                               bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
+        self.softmax = nn.Softmax(dim=1)
 
-        self.fc1 = nn.Linear(512 * block.expansion, args.output_classes)
+        if args.input_size == 224:
+            self.avgpool = nn.AvgPool2d(7, stride=1)
+        else:
+            self.avgpool = nn.AvgPool2d(3, stride=1)
+        self.color_fc = nn.Linear(512 * block.expansion, args.color_classes)
+        self.type_fc = nn.Linear(512 * block.expansion, args.type_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -128,8 +129,7 @@ class ResNet(nn.Module):
                 nn.BatchNorm2d(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers = [block(self.inplanes, planes, stride, downsample)]
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes))
@@ -137,15 +137,8 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        if self.args.size == 896:
-            x = self.preconv(x)
-            x = self.prebn(x)
-            x = self.relu(x)
-            x = self.conv1_(x)
-            x = self.bn1_(x)
-        else:
-            x = self.conv1(x)
-            x = self.bn1(x)
+        x = self.conv1(x)
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
@@ -156,37 +149,19 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
-        x = self.fc1(x)
+        y = self.color_fc(x)
+        z = self.type_fc(x)
+        y = self.softmax(y)
+        z = self.softmax(z)
+        x = torch.cat((y, z), 1)
+        # print(x)
+        # print(x.shape)
         return x
-
-
-def resnet18(args):
-    """Constructs a ResNet-101 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    if args.pretrained:
-        model = ResNet(BasicBlock, [2, 2, 2, 2], args)
-        pretrained_dict = torch.load(args.pretrained)
-        model_dict = model.state_dict()
-
-        keys = deepcopy(pretrained_dict).keys()
-
-        for key in keys:
-            if key not in model_dict:
-                print(key)
-                del pretrained_dict[key]
-
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
-
-        return model
-
-    return ResNet(BasicBlock, [2, 2, 2, 2], args)
 
 
 def resnet50(args):
     """Constructs a ResNet-50 model.
+
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
@@ -212,6 +187,7 @@ def resnet50(args):
 
 def resnet101(args):
     """Constructs a ResNet-101 model.
+
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
@@ -220,7 +196,7 @@ def resnet101(args):
         pretrained_dict = torch.load(args.pretrained)
         model_dict = model.state_dict()
 
-        keys = deepcopy(pretrained_dict).keys()
+        keys = pretrained_dict.keys()
 
         for key in keys:
             if key not in model_dict:
@@ -241,7 +217,7 @@ def resnet152(args):
         pretrained_dict = torch.load(args.pretrained)
         model_dict = model.state_dict()
 
-        keys = pretrained_dict.keys()
+        keys = deepcopy(pretrained_dict).keys()
 
         for key in keys:
             if key not in model_dict:

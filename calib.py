@@ -51,7 +51,7 @@ class ImageBatchStream():
         self.prefix = prefix
         self.batch_size = batch_size
         lines = open(filename).readlines()
-        calibration_files = [s.split()[0] for s in lines]
+        calibration_files = [s.split()[0].strip('*') for s in lines]
         self.max_batches = (len(calibration_files) // batch_size) + \
                            (1 if (len(calibration_files) % batch_size)
                             else 0)
@@ -70,6 +70,7 @@ class ImageBatchStream():
         # self.preprocessor = preprocessor
 
     def read_image_chw(self, path):
+        # print(os.path.join(self.prefix, path))
         img = cv2.imread(os.path.join(self.prefix, path))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
