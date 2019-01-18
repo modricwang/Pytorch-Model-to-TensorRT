@@ -22,8 +22,8 @@ args.fc_num = 5
 args.batch_size = 4
 
 args.pretrained = "checkpoint/model_best.pth"
-args.onnx_model_name = "models/model.onnx"
-args.trt_model_name = "models/engine.bin"
+args.onnx_model_name = "model.onnx"
+args.trt_model_name = "engine.bin"
 
 args.fake_test_file = "data/fake_test.txt"
 args.test_file = "data/test.txt"
