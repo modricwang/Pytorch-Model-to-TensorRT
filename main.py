@@ -12,7 +12,6 @@ from argparse import ArgumentParser
 from tqdm import tqdm, tqdm_notebook
 
 from resnet import resnet50
-from rt_infer import trt_infer
 from image_reader import read_image_chw
 import calib as calibrator
 
