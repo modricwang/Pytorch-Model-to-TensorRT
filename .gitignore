@@ -1,8 +1,9 @@
-
 \.idea/
 
 __pycache__/
 
-engin\.bin
+source.sh
 
-model\.onnx
+checkpoint/*
+models/*
+data/*

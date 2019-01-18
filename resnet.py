@@ -86,10 +86,6 @@ class Bottleneck(nn.Module):
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, args):
-
-        if not hasattr(args, 'input_size'):
-            args.input_size = 224
-
         self.args = args
 
         self.inplanes = 64
@@ -109,8 +105,8 @@ class ResNet(nn.Module):
             self.avgpool = nn.AvgPool2d(7, stride=1)
         else:
             self.avgpool = nn.AvgPool2d(3, stride=1)
-        self.color_fc = nn.Linear(512 * block.expansion, args.color_classes)
-        self.type_fc = nn.Linear(512 * block.expansion, args.type_classes)
+
+        self.fc = nn.Linear(512 * block.expansion, args.fc_num)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -149,13 +145,8 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
-        y = self.color_fc(x)
-        z = self.type_fc(x)
-        y = self.softmax(y)
-        z = self.softmax(z)
-        x = torch.cat((y, z), 1)
-        # print(x)
-        # print(x.shape)
+        x = self.fc(x)
+        x = self.softmax(x)
         return x
 
 
@@ -168,6 +159,8 @@ def resnet50(args):
     if args.pretrained:
         model = ResNet(Bottleneck, [3, 4, 6, 3], args)
         pretrained_dict = torch.load(args.pretrained)
+        if "state_dict" in pretrained_dict.keys():
+            pretrained_dict = pretrained_dict["state_dict"]
         model_dict = model.state_dict()
 
         keys = deepcopy(pretrained_dict).keys()
@@ -194,6 +187,8 @@ def resnet101(args):
     if args.pretrained:
         model = ResNet(Bottleneck, [3, 4, 23, 3], args)
         pretrained_dict = torch.load(args.pretrained)
+        if "state_dict" in pretrained_dict.keys():
+            pretrained_dict = pretrained_dict["state_dict"]
         model_dict = model.state_dict()
 
         keys = pretrained_dict.keys()
@@ -215,6 +210,8 @@ def resnet152(args):
     if args.pretrained:
         model = ResNet(Bottleneck, [3, 8, 36, 3], args)
         pretrained_dict = torch.load(args.pretrained)
+        if "state_dict" in pretrained_dict.keys():
+            pretrained_dict = pretrained_dict["state_dict"]
         model_dict = model.state_dict()
 
         keys = deepcopy(pretrained_dict).keys()

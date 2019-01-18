@@ -8,27 +8,37 @@ Python packages: in `requirements.txt`
 
 External: 
 
-- CUDA >= 8.0
-- CUDNN >= 5.0
-- TensorRT >= 3.0
-- Test dataset and list
+- CUDA == 9.0
+- CUDNN == 7.3.1
+- TensorRT == 4.0.2.6
 
-The list of test dataset should follow this format:
+### Data And Checkpoint Prepare
+
+You shuold prepare data and model weights in like this way:
+```
+project  
+│
+└───data
+│   │   test.txt
+│   │   fake-test.txt
+│   │   images
+│   
+└───checkpoint
+    │   model_best.pth
+
+```
+
+The list of test file should follow this format:
 ```text
-file0 label0
-file1 label1
+file0,label0
+file1,label1
 ... ...
 ``` 
 
+Or you can download the example from [BaiduYun](https://pan.baidu.com/s/1ecVcWXDbEwKl2D_PUuGmng) 
+
 ### Convert step:
 
-step0: load your model in main.py 
-
-step1: modify `test_list` and `data_prefix` in main.py
-
-step2:
 ```bash
 python main.py
 ```
-
-If convert success, `model.onnx` and `engin.bin` will appear in your folder.
