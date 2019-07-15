@@ -10,7 +10,7 @@ External:
 
 - CUDA == 9.0
 - CUDNN == 7.3.1
-- TensorRT == 4.0.2.6
+- TensorRT == 4.0.2.6 [link](https://developer.nvidia.com/tensorrt)
 
 ### Data And Checkpoint Prepare
 
