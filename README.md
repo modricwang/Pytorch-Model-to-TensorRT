@@ -14,7 +14,7 @@ External:
 
 ### Data And Checkpoint Prepare
 
-You shuold prepare data and model weights in like this way:
+You should prepare data and model weights in like this way:
 ```
 project  
 │
